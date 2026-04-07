@@ -59,23 +59,6 @@ You can download the compiled version of this app directly from the [Releases Ta
 2. Inject the app into your device using [AltStore](https://altstore.io/) or [Sideloadly](https://sideloadly.io/).
 3. Trust the developer profile in your iOS Settings.
 
-## 👨‍💻 Build from Source
-
-If you want to clone and run this project locally:
-
-```bash
-# 1. Clone the repository
-git clone [https://github.com/ahmadsyahani/nexa.git](https://github.com/ahmadsyahani/nexa.git)
-
-# 2. Go into the project directory
-cd nexa
-
-# 3. Get Flutter packages
-flutter pub get
-
-# 4. Run the app
-flutter run
-```
 <div align="center">
 <i>Built with ❤️ by Han</i>
 </div>
