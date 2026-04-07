@@ -1,7 +1,7 @@
 <div align="center">
   <img src="assets/images/Nexa_wordmark_light.png" alt="Nexa Wordmark Logo" width="350"/>
 
-  ### The Ultimate Personal Hub & Campus Survival Kit
+  ### The Ultimate Personal Hub & Assistant.
   
   [![Flutter](https://img.shields.io/badge/Built_with-Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
   [![Release](https://img.shields.io/github/v/release/ahmadsyahani/nexa?style=for-the-badge&color=10B981)](https://github.com/ahmadsyahani/nexa/releases)
