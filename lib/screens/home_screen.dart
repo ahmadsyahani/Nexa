@@ -36,7 +36,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _tugasFuture = _apiService.getTugas(widget.email, widget.password);
   }
 
-  // Logika filter hari tetap pake Indo karena API kirimnya hari dalam bahasa Indo
+  Future<void> _refreshData() async {
+    setState(() {
+      _jadwalFuture = _apiService.getJadwal(widget.email, widget.password);
+      _tugasFuture = _apiService.getTugas(widget.email, widget.password);
+    });
+    await Future.wait([_jadwalFuture, _tugasFuture]);
+  }
+
   String _getSystemDay() {
     int weekday = DateTime.now().weekday;
     switch (weekday) {
@@ -60,6 +67,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handlePresensi() async {
+    // 👇 Tarik info bahasa saat ini 👇
     final String currentLang = languageNotifier.value;
 
     showDialog(
@@ -75,6 +83,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final res = await _apiService.getAbsen(widget.email, widget.password);
+
+      final now = DateTime.now();
+      final submitTime =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
 
       final bool isSuccess =
@@ -83,118 +96,134 @@ class _HomeScreenState extends State<HomeScreen> {
           res['data'] != null &&
           res['data']['matkul'] != null;
 
-      final String msg = isSuccess
-          ? (res['message'] ??
-                AppTranslations.getText('presensi_no_data', currentLang))
-          : AppTranslations.getText('presensi_no_data', currentLang);
+      String namaMatkul = '';
+      if (res != null && res['data'] != null && res['data']['matkul'] != null) {
+        namaMatkul = res['data']['matkul'];
+      }
 
-      _showStatusDialog(isSuccess: isSuccess, message: msg);
+      _showStatusDialog(
+        isSuccess: isSuccess,
+        namaMatkul: namaMatkul,
+        submitTime: submitTime,
+        lang: currentLang, // 👈 Lempar bahasa ke pop-up
+      );
     } catch (e) {
       if (mounted) Navigator.of(context, rootNavigator: true).pop();
+
+      final now = DateTime.now();
+      final submitTime =
+          "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}";
+
       _showStatusDialog(
         isSuccess: false,
-        message: AppTranslations.getText('presensi_net_error', currentLang),
+        namaMatkul: '',
+        submitTime: submitTime,
+        lang: currentLang,
       );
     }
   }
 
-  void _showStatusDialog({required bool isSuccess, required String message}) {
+  void _showStatusDialog({
+    required bool isSuccess,
+    required String namaMatkul,
+    required String submitTime,
+    required String lang, // 👈 Parameter baru buat translasi
+  }) {
     showDialog(
       context: context,
-      builder: (c) {
-        final isDark = Theme.of(c).brightness == Brightness.dark;
-        final bgColor = Theme.of(c).cardColor;
-        final textColor = Theme.of(c).textTheme.bodyLarge?.color;
-        final String currentLang = languageNotifier.value;
+      builder: (context) {
+        // 👇 Cek apakah HP user lagi pakai Dark Mode 👇
+        final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        return AlertDialog(
-          backgroundColor: bgColor,
+        return Dialog(
+          // Background menyesuaikan tema
+          backgroundColor: isDark ? const Color(0xFF1C1C1E) : Colors.white,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
           ),
-          contentPadding: const EdgeInsets.all(24),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: isSuccess
-                      ? (isDark
-                            ? Colors.green.withOpacity(0.1)
-                            : Colors.green.shade50)
-                      : (isDark
-                            ? Colors.red.withOpacity(0.1)
-                            : Colors.red.shade50),
-                  shape: BoxShape.circle,
+          child: Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(isDark ? 0.1 : 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.check_circle_rounded,
+                    color: Colors.green,
+                    size: 48,
+                  ),
                 ),
-                child: Icon(
+                const SizedBox(height: 20),
+
+                Text(
+                  // 👇 Logika 2 Bahasa buat Judul 👇
                   isSuccess
-                      ? Icons.check_circle_rounded
-                      : Icons.event_busy_rounded,
-                  size: 50,
-                  color: isSuccess
-                      ? const Color(0xFF10B981)
-                      : Colors.red.shade400,
+                      ? (lang == 'en'
+                            ? 'Attendance Successful!'
+                            : 'Berhasil Absen!')
+                      : (lang == 'en' ? 'All Good!' : 'Aman Sentosa!'),
+                  style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDark
+                        ? Colors.white
+                        : Colors.black87, // Warna teks dinamis
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                isSuccess
-                    ? AppTranslations.getText(
-                        'presensi_success_title',
-                        currentLang,
-                      )
-                    : AppTranslations.getText(
-                        'presensi_failed_title',
-                        currentLang,
+                const SizedBox(height: 8),
+
+                Text(
+                  isSuccess
+                      ? (lang == 'en'
+                            ? 'Successfully recorded attendance for $namaMatkul at $submitTime.'
+                            : 'Berhasil Absensi untuk Matkul $namaMatkul pada pukul $submitTime WIB.')
+                      : (lang == 'en'
+                            ? 'You have already attended, or the lecturer has not opened the attendance yet.'
+                            : 'Kamu sudah melakukan presensi, atau dosen belum membuka absensi.'),
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontFamily: 'PlusJakartaSans',
+                    fontSize: 14,
+                    height: 1.4,
+                    color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                  ),
+                ),
+                const SizedBox(height: 24),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      // Warna tombol ngikutin tema
+                      backgroundColor: isDark
+                          ? const Color(0xFF2C2C2E)
+                          : Colors.grey.shade100,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
                       ),
-                style: TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 18,
-                  color: textColor,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                message,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: isDark ? Colors.grey.shade400 : Colors.grey.shade600,
-                  fontSize: 13,
-                  fontFamily: 'PlusJakartaSans',
-                ),
-              ),
-              const SizedBox(height: 24),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isSuccess
-                        ? const Color(0xFF10B981)
-                        : (isDark
-                              ? Colors.grey.shade800
-                              : const Color(0xFF111827)),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                      elevation: 0,
                     ),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    elevation: 0,
-                  ),
-                  onPressed: () => Navigator.pop(c),
-                  child: Text(
-                    isSuccess
-                        ? AppTranslations.getText('btn_finish', currentLang)
-                        : AppTranslations.getText('btn_close', currentLang),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      fontFamily: 'PlusJakartaSans',
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      lang == 'en' ? 'Close' : 'Tutup',
+                      style: TextStyle(
+                        fontFamily: 'PlusJakartaSans',
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : Colors.black87,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         );
       },
@@ -225,197 +254,208 @@ class _HomeScreenState extends State<HomeScreen> {
         return Scaffold(
           backgroundColor: bgColor,
           body: SafeArea(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 20),
-                  // --- HEADER ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        "${AppTranslations.getText('hi_greeting', lang)}, $firstName", // 👈 DINAMIS
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: textColor,
-                          fontFamily: 'PlusJakartaSans',
-                          letterSpacing: -1,
-                        ),
-                      ),
-                      M3BouncyButton(
-                        onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (c) => NotifScreen(
-                              email: widget.email,
-                              password: widget.password,
-                            ),
-                          ),
-                        ),
-                        child: Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: cardColor,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color: Colors.grey.withOpacity(0.1),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(
-                                  isDark ? 0.0 : 0.04,
-                                ),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Icon(
-                            Icons.notifications_none_rounded,
+            // 👇 BUNGKUS DENGAN REFRESH INDICATOR 👇
+            child: RefreshIndicator(
+              color: Colors.white,
+              backgroundColor: const Color(0xFF346EE0),
+              strokeWidth: 3.0,
+              onRefresh: _refreshData,
+              child: SingleChildScrollView(
+                // 👇 UBAH PHYSICS BIAR SELALU BISA DITARIK 👇
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 20),
+                    // --- HEADER ---
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "${AppTranslations.getText('hi_greeting', lang)}, $firstName", // 👈 DINAMIS
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
                             color: textColor,
-                            size: 24,
+                            fontFamily: 'PlusJakartaSans',
+                            letterSpacing: -1,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-                  _buildDigitalIDCard(
-                    fullName,
-                    data['nrp'] ?? '-',
-                    data['semester']?.toString() ?? '-',
-                    lang,
-                  ),
-                  const SizedBox(height: 32),
-
-                  // --- QUICK MENU ---
-                  Text(
-                    AppTranslations.getText('quick_menu', lang),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _buildQuickMenuItem(
-                        icon: Icons.fingerprint_rounded,
-                        label: AppTranslations.getText('menu_absen', lang),
-                        bgColor: isDark
-                            ? const Color(0xFF059669).withOpacity(0.15)
-                            : const Color(0xFFD1FAE5),
-                        iconColor: isDark
-                            ? const Color(0xFF34D399)
-                            : const Color(0xFF059669),
-                        textColor: textColor,
-                        onTap: _handlePresensi,
-                      ),
-                      _buildQuickMenuItem(
-                        icon: Icons.link_rounded,
-                        label: AppTranslations.getText(
-                          'menu_links',
-                          lang,
-                        ), // 👈 DINAMIS
-                        bgColor: isDark
-                            ? const Color(0xFFD97706).withOpacity(0.15)
-                            : const Color(0xFFFEF3C7),
-                        iconColor: isDark
-                            ? const Color(0xFFFBBF24)
-                            : const Color(0xFFD97706),
-                        textColor: textColor,
-                        onTap: () {
-                          Navigator.push(
+                        M3BouncyButton(
+                          onTap: () => Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const PortalScreen(),
+                              builder: (c) => NotifScreen(
+                                email: widget.email,
+                                password: widget.password,
+                              ),
                             ),
-                          );
-                        },
-                      ),
-                      _buildQuickMenuItem(
-                        icon: Icons.library_books_rounded,
-                        label: AppTranslations.getText(
-                          'menu_notes',
-                          lang,
-                        ), // 👈 DINAMIS
-                        bgColor: isDark
-                            ? const Color(0xFF2563EB).withOpacity(0.15)
-                            : const Color(0xFFDBEAFE),
-                        iconColor: isDark
-                            ? const Color(0xFF60A5FA)
-                            : const Color(0xFF2563EB),
-                        textColor: textColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const CatatanScreen(),
+                          ),
+                          child: Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: cardColor,
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: Colors.grey.withOpacity(0.1),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(
+                                    isDark ? 0.0 : 0.04,
+                                  ),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
-                          );
-                        },
-                      ),
-                      _buildQuickMenuItem(
-                        icon: Icons.calculate_rounded,
-                        label: AppTranslations.getText('menu_ipk', lang),
-                        bgColor: isDark
-                            ? const Color(0xFF7C3AED).withOpacity(0.15)
-                            : const Color(0xFFEDE9FE),
-                        iconColor: isDark
-                            ? const Color(0xFFA78BFA)
-                            : const Color(0xFF7C3AED),
-                        textColor: textColor,
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const IpkCalculatorScreen(),
+                            child: Icon(
+                              Icons.notifications_none_rounded,
+                              color: textColor,
+                              size: 24,
                             ),
-                          );
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 36),
-                  Text(
-                    AppTranslations.getText('schedule_today', lang),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildDetailedJadwalHorizontal(
-                    systemDay,
-                    isDark,
-                    cardColor,
-                    textColor,
-                    lang,
-                  ),
-
-                  const SizedBox(height: 36),
-                  Text(
-                    AppTranslations.getText('task_list', lang),
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: textColor,
+                    const SizedBox(height: 32),
+                    _buildDigitalIDCard(
+                      fullName,
+                      data['nrp'] ?? '-',
+                      data['semester']?.toString() ?? '-',
+                      lang,
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildTugasFilters(isDark, textColor, lang),
-                  const SizedBox(height: 16),
-                  _buildDetailedTugasList(isDark, cardColor, textColor, lang),
-                  const SizedBox(height: 40),
-                ],
+                    const SizedBox(height: 32),
+
+                    // --- QUICK MENU ---
+                    Text(
+                      AppTranslations.getText('quick_menu', lang),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildQuickMenuItem(
+                          icon: Icons.fingerprint_rounded,
+                          label: AppTranslations.getText('menu_absen', lang),
+                          bgColor: isDark
+                              ? const Color(0xFF059669).withOpacity(0.15)
+                              : const Color(0xFFD1FAE5),
+                          iconColor: isDark
+                              ? const Color(0xFF34D399)
+                              : const Color(0xFF059669),
+                          textColor: textColor,
+                          onTap: _handlePresensi,
+                        ),
+                        _buildQuickMenuItem(
+                          icon: Icons.link_rounded,
+                          label: AppTranslations.getText(
+                            'menu_links',
+                            lang,
+                          ), // 👈 DINAMIS
+                          bgColor: isDark
+                              ? const Color(0xFFD97706).withOpacity(0.15)
+                              : const Color(0xFFFEF3C7),
+                          iconColor: isDark
+                              ? const Color(0xFFFBBF24)
+                              : const Color(0xFFD97706),
+                          textColor: textColor,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const PortalScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildQuickMenuItem(
+                          icon: Icons.library_books_rounded,
+                          label: AppTranslations.getText(
+                            'menu_notes',
+                            lang,
+                          ), // 👈 DINAMIS
+                          bgColor: isDark
+                              ? const Color(0xFF2563EB).withOpacity(0.15)
+                              : const Color(0xFFDBEAFE),
+                          iconColor: isDark
+                              ? const Color(0xFF60A5FA)
+                              : const Color(0xFF2563EB),
+                          textColor: textColor,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CatatanScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                        _buildQuickMenuItem(
+                          icon: Icons.calculate_rounded,
+                          label: AppTranslations.getText('menu_ipk', lang),
+                          bgColor: isDark
+                              ? const Color(0xFF7C3AED).withOpacity(0.15)
+                              : const Color(0xFFEDE9FE),
+                          iconColor: isDark
+                              ? const Color(0xFFA78BFA)
+                              : const Color(0xFF7C3AED),
+                          textColor: textColor,
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) =>
+                                    const IpkCalculatorScreen(),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 36),
+                    Text(
+                      AppTranslations.getText('schedule_today', lang),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildDetailedJadwalHorizontal(
+                      systemDay,
+                      isDark,
+                      cardColor,
+                      textColor,
+                      lang,
+                    ),
+
+                    const SizedBox(height: 36),
+                    Text(
+                      AppTranslations.getText('task_list', lang),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: textColor,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildTugasFilters(isDark, textColor, lang),
+                    const SizedBox(height: 16),
+                    _buildDetailedTugasList(isDark, cardColor, textColor, lang),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
             ),
           ),

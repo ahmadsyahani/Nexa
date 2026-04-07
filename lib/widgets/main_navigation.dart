@@ -3,7 +3,6 @@ import 'package:animations/animations.dart';
 import '../screens/home_screen.dart';
 import '../screens/jadwal_screen.dart';
 import '../screens/tugas_screen.dart';
-import '../screens/absen_screen.dart';
 import '../screens/profile_screen.dart';
 import '../main.dart';
 import '../services/translation_screen.dart';
@@ -39,7 +38,6 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       JadwalScreen(email: widget.email, password: widget.password),
       TugasScreen(email: widget.email, password: widget.password),
-      AbsenScreen(email: widget.email, password: widget.password),
       ProfileScreen(profileData: widget.profileData),
     ];
   }
@@ -110,15 +108,6 @@ class _MainNavigationState extends State<MainNavigation> {
                 ),
                 // 👇 DINAMIS 👇
                 label: AppTranslations.getText('nav_tugas', lang),
-              ),
-              NavigationDestination(
-                icon: const Icon(Icons.check_circle_outline_rounded),
-                selectedIcon: Icon(
-                  Icons.check_circle_rounded,
-                  color: activeIconColor,
-                ),
-                // 👇 DINAMIS 👇
-                label: AppTranslations.getText('nav_absen', lang),
               ),
               NavigationDestination(
                 icon: const Icon(Icons.person_outline_rounded),
