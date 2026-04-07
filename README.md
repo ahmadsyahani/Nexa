@@ -58,7 +58,3 @@ You can download the compiled version of this app directly from the [Releases Ta
 1. Download the `Nexa-v1.x.x.ipa` file.
 2. Inject the app into your device using [AltStore](https://altstore.io/) or [Sideloadly](https://sideloadly.io/).
 3. Trust the developer profile in your iOS Settings.
-
-<div align="center">
-<i>Built with ❤️ by Han</i>
-</div>
