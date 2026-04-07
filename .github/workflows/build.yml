@@ -1,0 +1,71 @@
+name: Build Nexa App (APK & IPA)
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  # ==========================================
+  # ANDROID
+  # ==========================================
+  build-android:
+    name: Build Android APK
+    runs-on: ubuntu-latest 
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: ☕ Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17' 
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+
+      - name: 🔨 Build Release APK
+        run: flutter build apk --release
+
+      - name: 📤 Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-Android-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+  # ==========================================
+  # IOS
+  # ==========================================
+  build-ios:
+    name: Build iOS IPA
+    runs-on: macos-latest 
+    steps:
+      - name: 📥 Checkout Code
+        uses: actions/checkout@v4
+
+      - name: 🐦 Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: 'stable'
+
+      - name: 📦 Install Dependencies
+        run: flutter pub get
+
+      - name: 🔨 Build iOS (tanpa sertifikat Apple Developer)
+        run: flutter build ios --release --no-codesign
+
+      - name: 🗜️ Package into .IPA File
+        run: |
+          mkdir -p Payload
+          mv build/ios/iphoneos/Runner.app Payload/
+          zip -r Nexa-iOS-Unsigned.ipa Payload/
+
+      - name: 📤 Upload IPA Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Nexa-iOS-IPA
+          path: Nexa-iOS-Unsigned.ipa
