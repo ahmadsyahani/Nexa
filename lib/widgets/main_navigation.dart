@@ -6,6 +6,10 @@ import '../screens/tugas_screen.dart';
 import '../screens/profile_screen.dart';
 import '../main.dart';
 import '../services/translation_screen.dart';
+import 'dart:async';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../services/notification_service.dart';
+import '../services/api_services.dart';
 
 class MainNavigation extends StatefulWidget {
   final Map<String, dynamic> profileData;
@@ -26,6 +30,7 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _selectedIndex = 0;
   late final List<Widget> _pages;
+  Timer? _pollingTimer;
 
   @override
   void initState() {
@@ -38,8 +43,46 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       JadwalScreen(email: widget.email, password: widget.password),
       TugasScreen(email: widget.email, password: widget.password),
-      ProfileScreen(profileData: widget.profileData),
+      ProfileScreen(profileData: widget.profileData, email: widget.email),
     ];
+    _startForegroundPolling();
+  }
+
+  void _startForegroundPolling() {
+    // Poll API every 1 minute while app is actively open
+    _pollingTimer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        final lastNotifCount = prefs.getInt('last_notif_count') ?? 0;
+        
+        final apiService = EtholApiService();
+        final response = await apiService.getNotif(widget.email, widget.password, refresh: true);
+        
+        if (response != null && response['error'] == false) {
+          final List<dynamic> notifs = response['data'] ?? [];
+          if (notifs.length > lastNotifCount) {
+            // New notification found
+            final latestNotif = notifs.first;
+            NotificationService().showNotification(
+              id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+              title: 'Notifikasi Baru',
+              body: latestNotif['keterangan'] ?? 'Ada pemberitahuan baru di Nexa',
+            );
+            await prefs.setInt('last_notif_count', notifs.length);
+          } else if (notifs.length < lastNotifCount) {
+            await prefs.setInt('last_notif_count', notifs.length);
+          }
+        }
+      } catch (e) {
+        debugPrint("Foreground polling error: $e");
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _pollingTimer?.cancel();
+    super.dispose();
   }
 
   @override

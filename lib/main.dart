@@ -5,12 +5,89 @@ import 'screens/login_screen.dart';
 import 'widgets/main_navigation.dart';
 import 'services/api_services.dart';
 import 'screens/splash_screen.dart';
+import 'package:workmanager/workmanager.dart';
+import 'services/notification_service.dart';
+import 'package:home_widget/home_widget.dart';
+
+@pragma('vm:entry-point')
+void callbackDispatcher() {
+  Workmanager().executeTask((task, inputData) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final email = prefs.getString('saved_email');
+      final password = prefs.getString('saved_password');
+      final lastNotifCount = prefs.getInt('last_notif_count') ?? 0;
+
+      if (email != null && password != null) {
+        // Initialize NotificationService since it's a new isolate
+        await NotificationService().init();
+        
+        final apiService = EtholApiService();
+        final response = await apiService.getNotif(email, password, refresh: true);
+        
+        if (response != null && response['error'] == false) {
+          final List<dynamic> notifs = response['data'] ?? [];
+          if (notifs.length > lastNotifCount) {
+            // Show new notification
+            final latestNotif = notifs.first;
+            await NotificationService().showNotification(
+              id: 0,
+              title: 'Notifikasi Baru',
+              body: latestNotif['keterangan'] ?? 'Ada pemberitahuan baru di Nexa',
+            );
+            await prefs.setInt('last_notif_count', notifs.length);
+          } else if (notifs.length < lastNotifCount) {
+            await prefs.setInt('last_notif_count', notifs.length);
+          }
+        }
+
+        // Fetch tugas for Widget Update
+        final tugasResponse = await apiService.getTugas(email, password, refresh: true);
+        if (tugasResponse != null && tugasResponse['error'] == false) {
+          final List<dynamic> tugasList = tugasResponse['data'] ?? [];
+          final undoneTasks = tugasList.where((t) => t['submited'] == false).toList();
+          
+          String nearestDeadline = "Deadline: -";
+          if (undoneTasks.isNotEmpty) {
+             // Find closest deadline if possible, for now just get the first one or "-"
+             final firstTask = undoneTasks.firstWhere((t) => t['deadline'] != null, orElse: () => undoneTasks.first);
+             nearestDeadline = "Deadline: ${firstTask['deadline'] ?? '-'}";
+          }
+          
+          await HomeWidget.saveWidgetData<String>('undone_tasks', 'Tugas Belum Selesai: ${undoneTasks.length}');
+          await HomeWidget.saveWidgetData<String>('nearest_deadline', nearestDeadline);
+          await HomeWidget.updateWidget(
+            name: 'AppWidgetProvider',
+            androidName: 'AppWidgetProvider',
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("Background task error: $e");
+    }
+    return Future.value(true);
+  });
+}
 
 final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
 final ValueNotifier<String> languageNotifier = ValueNotifier('id');
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize notifications and background fetch
+  await NotificationService().init();
+  await NotificationService().requestPermissions();
+  Workmanager().initialize(
+    callbackDispatcher,
+    isInDebugMode: false,
+  );
+  Workmanager().registerPeriodicTask(
+    "1",
+    "backgroundNotifTask",
+    frequency: const Duration(minutes: 15),
+  );
+
   final prefs = await SharedPreferences.getInstance();
 
   final isDark = prefs.getBool('isDarkMode') ?? false;

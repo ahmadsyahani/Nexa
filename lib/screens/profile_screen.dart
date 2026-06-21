@@ -13,8 +13,9 @@ import '../screens/menus/tentang_app_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   final Map<String, dynamic> profileData;
+  final String email;
 
-  const ProfileScreen({super.key, required this.profileData});
+  const ProfileScreen({super.key, required this.profileData, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -155,7 +156,7 @@ class ProfileScreen extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (c) =>
-                            DetailProfilScreen(profileData: profileData),
+                            DetailProfilScreen(profileData: profileData, email: email),
                       ),
                     ),
                   ),
@@ -258,8 +259,9 @@ class ProfileScreen extends StatelessWidget {
                     child: ElevatedButton.icon(
                       onPressed: () async {
                         final prefs = await SharedPreferences.getInstance();
-                        await prefs.clear();
-                        EtholApiService().clearAllCache();
+                        await prefs.remove('saved_email');
+                        await prefs.remove('saved_password');
+                        await EtholApiService().clearAllCache();
                         if (context.mounted) {
                           Navigator.of(context).pushAndRemoveUntil(
                             MaterialPageRoute(

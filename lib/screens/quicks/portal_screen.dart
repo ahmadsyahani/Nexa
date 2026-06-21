@@ -19,7 +19,7 @@ class PortalScreen extends StatelessWidget {
       'desc': 'Sistem Informasi Manajemen',
       'icon': Icons.account_balance_rounded,
       'color': 0xFFF59E0B, // Amber
-      'url': 'https://mis.pens.ac.id/',
+      'url': 'https://online.mis.pens.ac.id/',
     },
     {
       'title': 'MIS ITByte',

@@ -23,10 +23,10 @@ class AppTranslations {
       'btn_close': 'Tutup',
       'btn_finish': 'Selesai',
 
-      'menu_ipk': 'Kalkulator IPK',
-      'ips_title': 'Indeks Semester (IPS)',
-      'ipk_title': 'Indeks Kumulatif (IPK)',
-      'add_course': 'Tambah Matkul',
+      'menu_ipk': 'Timer Belajar',
+      'pomodoro_work': 'Fokus',
+      'pomodoro_break': 'Istirahat',
+      'pomodoro_start': 'Mulai',
 
       // Jadwal
       'day_senin': 'Senin', 'day_selasa': 'Selasa', 'day_rabu': 'Rabu',
@@ -127,10 +127,10 @@ class AppTranslations {
       'btn_close': 'Close',
       'btn_finish': 'Done',
 
-      'menu_ipk': 'GPA Calculator',
-      'ips_title': 'Semester GPA (IPS)',
-      'ipk_title': 'Cumulative GPA (IPK)',
-      'add_course': 'Add Course',
+      'menu_ipk': 'Study Timer',
+      'pomodoro_work': 'Focus',
+      'pomodoro_break': 'Break',
+      'pomodoro_start': 'Start',
 
       'day_senin': 'Monday',
       'day_selasa': 'Tuesday',

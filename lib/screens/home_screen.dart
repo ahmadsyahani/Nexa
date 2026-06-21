@@ -5,7 +5,7 @@ import '../services/translation_screen.dart';
 import 'notif_screen.dart';
 import '../screens/quicks/portal_screen.dart';
 import '../screens/quicks/catatan_screen.dart';
-import '../screens/quicks/ipk_calculator_screen.dart';
+import '../screens/quicks/pomodoro_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> profileData;
@@ -400,7 +400,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                         _buildQuickMenuItem(
-                          icon: Icons.calculate_rounded,
+                          icon: Icons.timer_rounded,
                           label: AppTranslations.getText('menu_ipk', lang),
                           bgColor: isDark
                               ? const Color(0xFF7C3AED).withOpacity(0.15)
@@ -414,7 +414,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               context,
                               MaterialPageRoute(
                                 builder: (context) =>
-                                    const IpkCalculatorScreen(),
+                                    const PomodoroScreen(),
                               ),
                             );
                           },

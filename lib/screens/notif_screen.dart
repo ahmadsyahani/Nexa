@@ -3,6 +3,7 @@ import 'package:animations/animations.dart';
 import '../services/api_services.dart';
 import '../main.dart';
 import '../services/translation_screen.dart';
+import '../services/notification_service.dart';
 
 class NotifScreen extends StatefulWidget {
   final String email;

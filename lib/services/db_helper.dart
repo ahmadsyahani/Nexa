@@ -15,7 +15,7 @@ class DBHelper {
     String path = join(await getDatabasesPath(), 'nexa_notes.db');
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $tableName(
@@ -26,6 +26,30 @@ class DBHelper {
             color INTEGER
           )
         ''');
+        await db.execute('''
+          CREATE TABLE attendance(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            subject_name TEXT,
+            attended INTEGER,
+            skipped INTEGER,
+            total_meetings INTEGER,
+            target_percentage REAL
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE attendance(
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              subject_name TEXT,
+              attended INTEGER,
+              skipped INTEGER,
+              total_meetings INTEGER,
+              target_percentage REAL
+            )
+          ''');
+        }
       },
     );
   }
@@ -55,5 +79,31 @@ class DBHelper {
   Future<int> deleteNote(int id) async {
     var dbClient = await db;
     return await dbClient.delete(tableName, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // --- ATTENDANCE CRUD OPERATIONS ---
+  Future<int> insertAttendance(Map<String, dynamic> attendance) async {
+    var dbClient = await db;
+    return await dbClient.insert('attendance', attendance);
+  }
+
+  Future<List<Map<String, dynamic>>> getAttendanceList() async {
+    var dbClient = await db;
+    return await dbClient.query('attendance', orderBy: 'id DESC');
+  }
+
+  Future<int> updateAttendance(Map<String, dynamic> attendance) async {
+    var dbClient = await db;
+    return await dbClient.update(
+      'attendance',
+      attendance,
+      where: 'id = ?',
+      whereArgs: [attendance['id']],
+    );
+  }
+
+  Future<int> deleteAttendance(int id) async {
+    var dbClient = await db;
+    return await dbClient.delete('attendance', where: 'id = ?', whereArgs: [id]);
   }
 }

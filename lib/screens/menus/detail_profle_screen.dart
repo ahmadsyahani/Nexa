@@ -4,8 +4,9 @@ import '../../services/translation_screen.dart';
 
 class DetailProfilScreen extends StatelessWidget {
   final Map<String, dynamic> profileData;
+  final String email;
 
-  const DetailProfilScreen({super.key, required this.profileData});
+  const DetailProfilScreen({super.key, required this.profileData, required this.email});
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +27,8 @@ class DetailProfilScreen extends StatelessWidget {
       valueListenable: languageNotifier,
       builder: (context, lang, child) {
         // 👇 Logika fallback dipindah ke sini biar dinamis 👇
-        final String email =
-            data['email'] ?? AppTranslations.getText('no_email', lang);
+        final String displayEmail =
+            data['email'] ?? email;
 
         // Cek jika status dari API adalah 'Aktif', kita terjemahkan.
         // Jika statusnya lain (misal: 'Cuti'), dia bakal balik ke teks asli kalau kuncinya ga ada.
@@ -80,7 +81,6 @@ class DetailProfilScreen extends StatelessWidget {
                   ),
                 ),
 
-                // --- KONTEN ---
                 Expanded(
                   child: SingleChildScrollView(
                     physics: const BouncingScrollPhysics(),
@@ -107,7 +107,7 @@ class DetailProfilScreen extends StatelessWidget {
                         const SizedBox(height: 16),
                         _buildInfoCard(
                           AppTranslations.getText('label_email', lang),
-                          email, // 👈 Udah dinamis
+                          displayEmail, 
                           Icons.alternate_email_rounded,
                           isDark,
                           cardColor,
