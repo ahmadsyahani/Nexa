@@ -201,7 +201,7 @@ class _CatatanScreenState extends State<CatatanScreen> {
           Text(
             lang == 'en'
                 ? "Your brilliant ideas and study notes will live here."
-                : "Ide-ide cemerlang dan catatan matkul lu bakal kumpul di sini.",
+                : "Ide-ide cemerlang dan catatan matkul mu bakal kumpul di sini.",
             textAlign: TextAlign.center,
             style: TextStyle(
               fontFamily: 'PlusJakartaSans',

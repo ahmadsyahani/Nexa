@@ -49,8 +49,8 @@ class _MainNavigationState extends State<MainNavigation> {
   }
 
   void _startForegroundPolling() {
-    // Poll API every 1 minute while app is actively open
-    _pollingTimer = Timer.periodic(const Duration(minutes: 1), (timer) async {
+    // Poll API every 3 minutes while app is actively open to protect server rate limits
+    _pollingTimer = Timer.periodic(const Duration(minutes: 3), (timer) async {
       try {
         final prefs = await SharedPreferences.getInstance();
         final lastNotifCount = prefs.getInt('last_notif_count') ?? 0;

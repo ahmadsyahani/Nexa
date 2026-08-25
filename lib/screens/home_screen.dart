@@ -5,7 +5,7 @@ import '../services/translation_screen.dart';
 import 'notif_screen.dart';
 import '../screens/quicks/portal_screen.dart';
 import '../screens/quicks/catatan_screen.dart';
-import '../screens/quicks/pomodoro_screen.dart';
+import '../screens/quicks/rekap_presensi_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final Map<String, dynamic> profileData;
@@ -243,6 +243,15 @@ class _HomeScreenState extends State<HomeScreen> {
         ? Map<String, dynamic>.from(rawProfile.first)
         : (rawProfile is Map ? Map<String, dynamic>.from(rawProfile) : {});
 
+    debugPrint("==================================================");
+    debugPrint("💳 [HomeScreen] DATA PROFILE UNTUK DIGITAL CARD:");
+    debugPrint("  - Nama         : ${data['nama']}");
+    debugPrint("  - NRP          : ${data['nrp']}");
+    debugPrint("  - Semester     : ${data['semester']}");
+    debugPrint("  - Tahun Aktif  : ${data['tahun_aktif']}");
+    debugPrint("  - Tahun Ajaran : ${data['tahun_ajaran']}");
+    debugPrint("==================================================");
+
     final String fullName = data['nama'] ?? 'User';
     final String firstName = fullName.split(' ')[0];
     final String systemDay = _getSystemDay();
@@ -323,10 +332,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 32),
                     _buildDigitalIDCard(
-                      fullName,
-                      data['nrp'] ?? '-',
-                      data['semester']?.toString() ?? '-',
-                      lang,
+                      name: fullName,
+                      nrp: data['nrp']?.toString() ?? '-',
+                      tahunAjaran: data['tahun_ajaran']?.toString() ?? '-',
+                      lang: lang,
                     ),
                     const SizedBox(height: 32),
 
@@ -341,83 +350,73 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _buildQuickMenuItem(
-                          icon: Icons.fingerprint_rounded,
-                          label: AppTranslations.getText('menu_absen', lang),
-                          bgColor: isDark
-                              ? const Color(0xFF059669).withOpacity(0.15)
-                              : const Color(0xFFD1FAE5),
-                          iconColor: isDark
-                              ? const Color(0xFF34D399)
-                              : const Color(0xFF059669),
-                          textColor: textColor,
-                          onTap: _handlePresensi,
+                        Expanded(
+                          child: _buildQuickMenuItem(
+                            icon: Icons.fingerprint_rounded,
+                            label: AppTranslations.getText('menu_absen', lang),
+                            accentColor: const Color(0xFF10B981),
+                            isDark: isDark,
+                            textColor: textColor,
+                            onTap: _handlePresensi,
+                          ),
                         ),
-                        _buildQuickMenuItem(
-                          icon: Icons.link_rounded,
-                          label: AppTranslations.getText(
-                            'menu_links',
-                            lang,
-                          ), // 👈 DINAMIS
-                          bgColor: isDark
-                              ? const Color(0xFFD97706).withOpacity(0.15)
-                              : const Color(0xFFFEF3C7),
-                          iconColor: isDark
-                              ? const Color(0xFFFBBF24)
-                              : const Color(0xFFD97706),
-                          textColor: textColor,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const PortalScreen(),
-                              ),
-                            );
-                          },
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickMenuItem(
+                            icon: Icons.fact_check_rounded,
+                            label: AppTranslations.getText('menu_rekap', lang),
+                            accentColor: const Color(0xFF8B5CF6),
+                            isDark: isDark,
+                            textColor: textColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => RekapPresensiScreen(
+                                    email: widget.email,
+                                    password: widget.password,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        _buildQuickMenuItem(
-                          icon: Icons.library_books_rounded,
-                          label: AppTranslations.getText(
-                            'menu_notes',
-                            lang,
-                          ), // 👈 DINAMIS
-                          bgColor: isDark
-                              ? const Color(0xFF2563EB).withOpacity(0.15)
-                              : const Color(0xFFDBEAFE),
-                          iconColor: isDark
-                              ? const Color(0xFF60A5FA)
-                              : const Color(0xFF2563EB),
-                          textColor: textColor,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const CatatanScreen(),
-                              ),
-                            );
-                          },
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickMenuItem(
+                            icon: Icons.link_rounded,
+                            label: AppTranslations.getText('menu_links', lang),
+                            accentColor: const Color(0xFFF59E0B),
+                            isDark: isDark,
+                            textColor: textColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PortalScreen(),
+                                ),
+                              );
+                            },
+                          ),
                         ),
-                        _buildQuickMenuItem(
-                          icon: Icons.timer_rounded,
-                          label: AppTranslations.getText('menu_ipk', lang),
-                          bgColor: isDark
-                              ? const Color(0xFF7C3AED).withOpacity(0.15)
-                              : const Color(0xFFEDE9FE),
-                          iconColor: isDark
-                              ? const Color(0xFFA78BFA)
-                              : const Color(0xFF7C3AED),
-                          textColor: textColor,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) =>
-                                    const PomodoroScreen(),
-                              ),
-                            );
-                          },
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildQuickMenuItem(
+                            icon: Icons.library_books_rounded,
+                            label: AppTranslations.getText('menu_notes', lang),
+                            accentColor: const Color(0xFF3B82F6),
+                            isDark: isDark,
+                            textColor: textColor,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const CatatanScreen(),
+                                ),
+                              );
+                            },
+                          ),
                         ),
                       ],
                     ),
@@ -464,156 +463,171 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // --- WIDGET HELPER ---
-  Widget _buildDigitalIDCard(
-    String name,
-    String nrp,
-    String semester,
-    String lang,
-  ) {
+  // --- WIDGET HELPER: DIGITAL ID CARD (API DRIVEN) ---
+  Widget _buildDigitalIDCard({
+    required String name,
+    required String nrp,
+    required String tahunAjaran,
+    required String lang,
+  }) {
     return Container(
       width: double.infinity,
-      height: 200,
+      height: 195,
       decoration: BoxDecoration(
-        color: const Color(0xFF346EE0),
-        borderRadius: BorderRadius.circular(20),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF0F172A), // Slate Navy
+            Color(0xFF1E3A8A), // Royal Blue
+            Color(0xFF2563EB), // Cobalt
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF346EE0).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
+            color: const Color(0xFF2563EB).withOpacity(0.32),
+            blurRadius: 22,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: Stack(
           children: [
-            // --- BACKGROUND PATTERN (Positioned Right untuk constraints eksplisit) ---
+            // Geometric Pattern Accent
             Positioned(
-              right: 0,
-              top: 0,
-              bottom: 0,
-              width: 150, // width pattern eksplisit
+              right: -10,
+              top: -10,
+              bottom: -10,
+              width: 160,
               child: Opacity(
-                opacity: 0.4,
+                opacity: 0.22,
                 child: Image.asset(
                   'assets/images/pattern.png',
-                  fit: BoxFit
-                      .cover, // pattern_width + overall_padded_stack_padding = constraints_OK
-                  color: const Color(0xFF346EE0),
-                  colorBlendMode: BlendMode.lighten,
+                  fit: BoxFit.cover,
+                  color: Colors.white,
                 ),
               ),
             ),
 
-            // --- KONTEN KARTU (Non-positioned child filling Stack content padded card bounds) ---
+            // Light reflection sheen
+            Positioned(
+              left: 0,
+              top: 0,
+              right: 0,
+              height: 60,
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.white.withOpacity(0.12),
+                      Colors.transparent,
+                    ],
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                  ),
+                ),
+              ),
+            ),
+
+            // Card Inner Layout
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Image.asset(
-                    'assets/images/logo_pens.png',
-                    height: 40,
-                    errorBuilder: (_, __, ___) =>
-                        const Icon(Icons.school, color: Colors.white, size: 36),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // 👇 INI YANG DIPERBAIKI (Hapus Redundant nested column padding & pass explicit constraints) 👇
-                  Align(
-                    alignment: Alignment
-                        .centerLeft, // constraints are now properly passed with softWrap
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        right: 120.0,
-                      ), // constraints OK with pattern bounds
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            name,
-                            maxLines:
-                                2, // kepanjangan dipaksa wrap ke bawah di multiple words kepanjangan
-                            overflow: TextOverflow.ellipsis,
-                            softWrap: true, // 👇 DIPAKSA KEBETULAN 👇
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              height: 1.2, //Constraints OK
-                              fontFamily: 'PlusJakartaSans',
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            nrp,
-                            maxLines:
-                                1, //constraints are met so wraps to multiple words kepanjangan OK
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: Colors.white.withOpacity(0.8),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'PlusJakartaSans',
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-
-                  // --- BAGIAN BAWAH (Semester & Status) ---
+                  // TOP ROW: Logo & Text
                   Row(
                     children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppTranslations.getText('id_semester', lang),
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'PlusJakartaSans',
-                            ),
-                          ),
-                          Text(
-                            semester,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'PlusJakartaSans',
-                            ),
-                          ),
-                        ],
+                      Image.asset(
+                        'assets/images/logo_pens.png',
+                        height: 30,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.school_rounded, color: Colors.white, size: 26),
                       ),
-                      const SizedBox(width: 40),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            AppTranslations.getText('id_status', lang),
-                            style: const TextStyle(
-                              color: Colors.white60,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              fontFamily: 'PlusJakartaSans',
-                            ),
+                      const SizedBox(width: 8),
+                      Text(
+                        "PENS STUDENT CARD",
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.1,
+                          fontFamily: 'PlusJakartaSans',
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // MIDDLE ROW: Name & NRP
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                          fontFamily: 'PlusJakartaSans',
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.22),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          nrp,
+                          style: const TextStyle(
+                            color: Color(0xFF93C5FD),
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            fontFamily: 'PlusJakartaSans',
+                            letterSpacing: 0.8,
                           ),
-                          Text(
-                            AppTranslations.getText('id_active', lang),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              fontFamily: 'PlusJakartaSans',
-                            ),
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  // BOTTOM ROW: Dynamic Tahun Ajaran Badge
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.18),
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
                           ),
-                        ],
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.school_outlined, color: Colors.white70, size: 13),
+                            const SizedBox(width: 5),
+                            Text(
+                              "TA $tahunAjaran",
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w800,
+                                fontFamily: 'PlusJakartaSans',
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -629,31 +643,58 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildQuickMenuItem({
     required IconData icon,
     required String label,
-    required Color bgColor,
-    required Color iconColor,
+    required Color accentColor,
+    required bool isDark,
     required Color? textColor,
     VoidCallback? onTap,
   }) {
     return M3BouncyButton(
       onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            width: 65,
-            height: 65,
-            decoration: BoxDecoration(color: bgColor, shape: BoxShape.circle),
-            child: Icon(icon, color: iconColor, size: 28),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textColor,
+      child: AspectRatio(
+        aspectRatio: 1.0,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            color: isDark
+                ? accentColor.withOpacity(0.09)
+                : accentColor.withOpacity(0.07),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: accentColor.withOpacity(isDark ? 0.22 : 0.16),
+              width: 1.0,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: accentColor.withOpacity(isDark ? 0.0 : 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-        ],
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                color: accentColor,
+                size: 24,
+              ),
+              const SizedBox(height: 5),
+              Text(
+                label,
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'PlusJakartaSans',
+                  color: textColor,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -1001,47 +1042,6 @@ class _HomeScreenState extends State<HomeScreen> {
               .toList(),
         );
       },
-    );
-  }
-
-  Widget _buildLinkTile(
-    String title,
-    IconData icon,
-    Color color,
-    bool isDark,
-    Color? textColor,
-  ) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      decoration: BoxDecoration(
-        color: isDark ? Theme.of(context).cardColor : const Color(0xFFF9FAFB),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey.withOpacity(0.1)),
-      ),
-      child: ListTile(
-        leading: Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: color, size: 20),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 14,
-            color: textColor,
-          ),
-        ),
-        trailing: Icon(
-          Icons.open_in_new_rounded,
-          size: 16,
-          color: isDark ? Colors.grey.shade600 : Colors.grey,
-        ),
-        onTap: () => Navigator.pop(context),
-      ),
     );
   }
 }
