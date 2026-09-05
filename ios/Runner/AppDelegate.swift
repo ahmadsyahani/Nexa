@@ -1,5 +1,6 @@
 import Flutter
 import UIKit
+import workmanager_apple
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
@@ -8,6 +9,16 @@ import UIKit
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     GeneratedPluginRegistrant.register(with: self)
+
+    UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
+
+    WorkmanagerPlugin.registerBGProcessingTask(
+      withIdentifier: "backgroundNotifTask"
+    )
+    WorkmanagerPlugin.registerBGAppRefreshTask(
+      withIdentifier: "dev.fluttercommunity.workmanager.iOSBackgroundAppRefresh"
+    )
+
     return super.application(application, didFinishLaunchingWithOptions: launchOptions)
   }
 }

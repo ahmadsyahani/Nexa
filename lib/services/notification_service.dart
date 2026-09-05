@@ -14,20 +14,26 @@ class NotificationService {
   NotificationService._internal();
 
   Future<void> init() async {
-    // Initialize Timezone
     tz.initializeTimeZones();
 
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
 
-    const InitializationSettings initializationSettings =
-        InitializationSettings(android: initializationSettingsAndroid);
+    const DarwinInitializationSettings initializationSettingsIOS =
+        DarwinInitializationSettings(
+          requestAlertPermission: false,
+          requestBadgePermission: false,
+          requestSoundPermission: false,
+        );
+
+    const InitializationSettings initializationSettings = InitializationSettings(
+      android: initializationSettingsAndroid,
+      iOS: initializationSettingsIOS,
+    );
 
     await flutterLocalNotificationsPlugin.initialize(
       settings: initializationSettings,
-      onDidReceiveNotificationResponse: (NotificationResponse response) {
-        // Handle notification tap here if needed
-      },
+      onDidReceiveNotificationResponse: (NotificationResponse response) {},
     );
   }
 
@@ -44,6 +50,12 @@ class NotificationService {
             AndroidFlutterLocalNotificationsPlugin
           >()
           ?.requestExactAlarmsPermission();
+    } else if (Platform.isIOS) {
+      await flutterLocalNotificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
     }
   }
 
@@ -62,8 +74,15 @@ class NotificationService {
           ticker: 'ticker',
           sound: RawResourceAndroidNotificationSound('nexa_sound'),
         );
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
     );
     await flutterLocalNotificationsPlugin.show(
       id: id,
@@ -88,8 +107,15 @@ class NotificationService {
           priority: Priority.high,
           sound: RawResourceAndroidNotificationSound('nexa_sound'),
         );
+    const DarwinNotificationDetails iOSPlatformChannelSpecifics =
+        DarwinNotificationDetails(
+          presentAlert: true,
+          presentBadge: true,
+          presentSound: true,
+        );
     const NotificationDetails platformChannelSpecifics = NotificationDetails(
       android: androidPlatformChannelSpecifics,
+      iOS: iOSPlatformChannelSpecifics,
     );
 
     await flutterLocalNotificationsPlugin.zonedSchedule(
