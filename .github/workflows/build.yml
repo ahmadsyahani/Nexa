@@ -60,6 +60,25 @@ jobs:
       - name: 📦 Install Flutter Dependencies
         run: flutter pub get
 
+      - name: ⚙️ Generate and Patch Podfile
+        working-directory: ios
+        run: |
+          # Perintah ini memaksa flutter membuat folder ios/Pods dan ios/Podfile tanpa nge-build full
+          flutter build ios --config-only || true
+          
+          # Paksa minimum iOS ke 14.0 di Podfile agar package modern tidak error
+          if [ -f "Podfile" ]; then
+            sed -i '' "s/^# platform :ios, '12.0'/platform :ios, '14.0'/g" Podfile
+            sed -i '' "s/^platform :ios, '12.0'/platform :ios, '14.0'/g" Podfile
+            sed -i '' "s/^platform :ios, '13.0'/platform :ios, '14.0'/g" Podfile
+          fi
+          
+          # Hapus Podfile.lock kalau ada yang nyangkut
+          rm -f Podfile.lock
+          
+          # Install pods manual dengan repo-update supaya pasti fresh
+          pod install --repo-update
+
       - name: 🔨 Build iOS (unsigned, no Apple Developer cert needed)
         run: flutter build ios --release --no-codesign
 
