@@ -60,10 +60,6 @@ jobs:
       - name: 📦 Install Flutter Dependencies
         run: flutter pub get
 
-      - name: 🍎 Install CocoaPods Dependencies
-        working-directory: ios
-        run: pod install --repo-update
-
       - name: 🔨 Build iOS (unsigned, no Apple Developer cert needed)
         run: flutter build ios --release --no-codesign
 
