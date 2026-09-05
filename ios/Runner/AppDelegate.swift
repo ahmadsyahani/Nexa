@@ -12,10 +12,10 @@ import workmanager_apple
 
     UNUserNotificationCenter.current().delegate = self as UNUserNotificationCenterDelegate
 
-    WorkmanagerPlugin.registerBGProcessingTask(
+    WorkmanagerPlugin.registerTask(
       withIdentifier: "backgroundNotifTask"
     )
-    WorkmanagerPlugin.registerBGAppRefreshTask(
+    WorkmanagerPlugin.registerTask(
       withIdentifier: "dev.fluttercommunity.workmanager.iOSBackgroundAppRefresh"
     )
 
